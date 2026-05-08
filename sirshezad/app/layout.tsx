@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Poppins, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Providers } from '@/components/providers'
 import './globals.css'
 
 const poppins = Poppins({ 
@@ -18,7 +19,6 @@ export const metadata: Metadata = {
   title: 'Riphah International College | Shaping Future Leaders',
   description: 'Experience the future of education with Riphah International College. Apply now for admissions and explore our world-class programs.',
   keywords: ['riphah', 'college', 'education', 'admissions', 'scholarships', 'campus', 'lahore'],
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -52,7 +52,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${poppins.variable} ${inter.variable} font-sans antialiased overflow-x-hidden`}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Analytics />
       </body>
     </html>
