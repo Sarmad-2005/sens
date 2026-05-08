@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Play, Pause, ChevronLeft, ChevronRight, Maximize2, FlaskConical, Library, GraduationCap, Dumbbell, Coffee } from "lucide-react"
+import { ChevronLeft, ChevronRight, FlaskConical, Library, GraduationCap, Dumbbell, Coffee } from "lucide-react"
 
 interface TourScene {
   id: string
@@ -52,21 +52,16 @@ const tourScenes: TourScene[] = [
 
 export function VirtualTourSection() {
   const [currentScene, setCurrentScene] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
   
   const scene = tourScenes[currentScene]
   const Icon = scene.icon
   
-  const nextScene = () => {
-    setCurrentScene((prev) => (prev + 1) % tourScenes.length)
-  }
-  
-  const prevScene = () => {
-    setCurrentScene((prev) => (prev - 1 + tourScenes.length) % tourScenes.length)
-  }
+  const nextScene = () => setCurrentScene((prev) => (prev + 1) % tourScenes.length)
+  const prevScene = () => setCurrentScene((prev) => (prev - 1 + tourScenes.length) % tourScenes.length)
 
   return (
-    <section id="tour" className="py-20 md:py-32 relative overflow-hidden bg-gradient-to-b from-background via-muted/30 to-background">
+    <section id="tour" className="py-20 md:py-32 relative overflow-hidden bg-linear-to-b from-background via-muted/30 to-background">
       <div className="container mx-auto px-6">
         <motion.div
           className="text-center mb-12"
@@ -95,55 +90,44 @@ export function VirtualTourSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          {/* Video/Image Container */}
-          <div className="relative aspect-video md:aspect-[21/9]">
+          {/* Video Container */}
+          <div className="relative aspect-video md:aspect-21/9">
+            <AnimatePresence mode="wait">
+              {/* Actual campus video — same for every scene */}
+              <video
+                ref={videoRef}
+                key="campus-video"
+                src="/campus-tour.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </AnimatePresence>
+
+            {/* Scene overlay label */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={scene.id}
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ 
-                  background: `linear-gradient(135deg, ${scene.color}30 0%, ${scene.color}10 100%)` 
-                }}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.5 }}
+                className="absolute inset-0 flex flex-col justify-end p-6 md:p-8 bg-linear-to-t from-black/70 via-transparent to-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
               >
-                {/* Placeholder for 360 viewer */}
-                <div className="text-center">
-                  <motion.div
-                    className="w-32 h-32 mx-auto rounded-3xl flex items-center justify-center mb-6"
-                    style={{ backgroundColor: `${scene.color}30` }}
-                    animate={{ 
-                      rotateY: isPlaying ? 360 : 0 
-                    }}
-                    transition={{ 
-                      duration: 8, 
-                      repeat: isPlaying ? Infinity : 0,
-                      ease: "linear"
-                    }}
+                <div className="flex items-center gap-3 mb-2">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: `${scene.color}cc` }}
                   >
-                    <Icon className="w-16 h-16" style={{ color: scene.color }} />
-                  </motion.div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2">{scene.name}</h3>
-                  <p className="text-muted-foreground max-w-md">{scene.description}</p>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold text-white">{scene.name}</h3>
                 </div>
+                <p className="text-white/70 text-sm md:text-base max-w-md">{scene.description}</p>
               </motion.div>
             </AnimatePresence>
-            
-            {/* Play/Pause Overlay */}
-            <motion.button
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full glass flex items-center justify-center"
-              onClick={() => setIsPlaying(!isPlaying)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isPlaying ? (
-                <Pause className="w-8 h-8 text-white" />
-              ) : (
-                <Play className="w-8 h-8 text-white ml-1" />
-              )}
-            </motion.button>
             
             {/* Navigation Arrows */}
             <motion.button
@@ -163,15 +147,6 @@ export function VirtualTourSection() {
             >
               <ChevronRight className="w-6 h-6 text-white" />
             </motion.button>
-            
-            {/* Fullscreen Button */}
-            <motion.button
-              className="absolute top-4 right-4 w-10 h-10 rounded-full glass flex items-center justify-center"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Maximize2 className="w-5 h-5 text-white" />
-            </motion.button>
           </div>
           
           {/* Scene Navigation */}
@@ -182,7 +157,7 @@ export function VirtualTourSection() {
                 return (
                   <motion.button
                     key={s.id}
-                    className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                    className={`shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                       index === currentScene 
                         ? "glass" 
                         : "hover:bg-white/5"
@@ -211,30 +186,6 @@ export function VirtualTourSection() {
               })}
             </div>
           </div>
-        </motion.div>
-        
-        {/* Quick Action Buttons */}
-        <motion.div
-          className="flex flex-wrap justify-center gap-4 mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <motion.button
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#1E3A8A] to-[#7C3AED] text-white font-semibold"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(30, 58, 138, 0.4)" }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Schedule Campus Visit
-          </motion.button>
-          <motion.button
-            className="px-6 py-3 rounded-xl border border-border font-semibold"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Download Campus Map
-          </motion.button>
         </motion.div>
       </div>
     </section>

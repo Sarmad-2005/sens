@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { motion, useMotionValue, useSpring, PanInfo } from "framer-motion"
-import { Quote, ChevronLeft, ChevronRight, Star } from "lucide-react"
+import { useState, useEffect } from "react"
+import { motion, useMotionValue, useSpring, PanInfo, AnimatePresence } from "framer-motion"
+import { ChevronLeft, ChevronRight, Star } from "lucide-react"
+import Image from "next/image"
 
 interface Testimonial {
   id: string
@@ -23,7 +24,7 @@ const testimonials: Testimonial[] = [
     company: "Google",
     quote: "The education I received here transformed my career. The faculty's dedication and the hands-on learning approach prepared me for the real world like nowhere else could.",
     rating: 5,
-    image: "ET",
+    image: "https://i.pravatar.cc/150?img=47",
     year: "Class of 2020"
   },
   {
@@ -33,7 +34,7 @@ const testimonials: Testimonial[] = [
     company: "Goldman Sachs",
     quote: "The business program's focus on practical skills and industry connections helped me land my dream job. The alumni network is incredibly supportive.",
     rating: 5,
-    image: "JR",
+    image: "https://i.pravatar.cc/150?img=12",
     year: "Class of 2019"
   },
   {
@@ -43,7 +44,7 @@ const testimonials: Testimonial[] = [
     company: "Apple",
     quote: "The design program pushed me to think creatively and develop a unique perspective. The mentorship I received was invaluable for my growth as a designer.",
     rating: 5,
-    image: "SC",
+    image: "https://i.pravatar.cc/150?img=44",
     year: "Class of 2021"
   },
   {
@@ -53,7 +54,7 @@ const testimonials: Testimonial[] = [
     company: "Johns Hopkins",
     quote: "The medical program's rigorous curriculum and clinical exposure gave me the foundation I needed. The simulation labs are world-class.",
     rating: 5,
-    image: "MP",
+    image: "https://i.pravatar.cc/150?img=15",
     year: "Class of 2018"
   },
   {
@@ -61,9 +62,9 @@ const testimonials: Testimonial[] = [
     name: "Priya Sharma",
     role: "Product Manager",
     company: "Microsoft",
-    quote: "Horizon University taught me to think critically and lead with empathy. The diverse community enriched my perspective immensely.",
+    quote: "Riphah taught me to think critically and lead with empathy. The diverse community enriched my perspective immensely.",
     rating: 5,
-    image: "PS",
+    image: "https://i.pravatar.cc/150?img=49",
     year: "Class of 2020"
   }
 ]
@@ -73,21 +74,14 @@ const colors = ["#1E3A8A", "#7C3AED", "#F59E0B", "#10B981", "#EF4444"]
 export function TestimonialsSection() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  
+
   const x = useMotionValue(0)
   const springX = useSpring(x, { damping: 30, stiffness: 200 })
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false)
-    const threshold = 100
-    
-    if (info.offset.x > threshold && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    } else if (info.offset.x < -threshold && currentIndex < testimonials.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    }
-    
+    if (info.offset.x > 100 && currentIndex > 0) setCurrentIndex(currentIndex - 1)
+    else if (info.offset.x < -100 && currentIndex < testimonials.length - 1) setCurrentIndex(currentIndex + 1)
     x.set(0)
   }
 
@@ -95,14 +89,11 @@ export function TestimonialsSection() {
     setCurrentIndex(Math.max(0, Math.min(index, testimonials.length - 1)))
   }
 
-  // Auto-rotate
   useEffect(() => {
     if (isDragging) return
-    
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % testimonials.length)
     }, 5000)
-    
     return () => clearInterval(timer)
   }, [isDragging])
 
@@ -112,10 +103,10 @@ export function TestimonialsSection() {
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-[#1E3A8A]/10 to-[#7C3AED]/10 rounded-full blur-3xl" />
       </div>
-      
+
       <div className="container mx-auto px-6">
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-14"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -131,122 +122,130 @@ export function TestimonialsSection() {
             Hear from our successful graduates who are making an impact around the world.
           </p>
         </motion.div>
-        
-        {/* 3D Carousel */}
-        <div 
-          ref={containerRef}
-          className="relative max-w-5xl mx-auto h-[500px] md:h-[450px] perspective-1000"
-        >
-          <motion.div
-            className="relative w-full h-full"
-            style={{ x: springX }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragStart={() => setIsDragging(true)}
-            onDragEnd={handleDragEnd}
-          >
-            {testimonials.map((testimonial, index) => {
-              const offset = index - currentIndex
-              const isActive = index === currentIndex
-              const color = colors[index % colors.length]
-              
-              return (
+
+        {/* Slider */}
+        <div className="relative max-w-4xl mx-auto">
+          {/* Cards */}
+          <div className="overflow-hidden rounded-3xl">
+            <motion.div
+              style={{ x: springX }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragStart={() => setIsDragging(true)}
+              onDragEnd={handleDragEnd}
+              className="cursor-grab active:cursor-grabbing"
+            >
+              <AnimatePresence mode="wait">
                 <motion.div
-                  key={testimonial.id}
-                  className="absolute top-1/2 left-1/2 w-[90%] md:w-[70%] max-w-2xl"
-                  animate={{
-                    x: `calc(-50% + ${offset * 80}%)`,
-                    y: "-50%",
-                    z: isActive ? 0 : -100,
-                    scale: isActive ? 1 : 0.85,
-                    opacity: Math.abs(offset) > 1 ? 0 : isActive ? 1 : 0.5,
-                    rotateY: offset * -15,
-                  }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  style={{
-                    transformStyle: "preserve-3d",
-                    zIndex: isActive ? 10 : 5 - Math.abs(offset),
-                  }}
+                  key={testimonials[currentIndex].id}
+                  initial={{ opacity: 0, x: 60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -60 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 28 }}
+                  className="glass rounded-3xl p-8 md:p-12 relative select-none"
                 >
-                  <div className="glass rounded-3xl p-6 md:p-8 relative">
-                    {/* Quote Icon */}
-                    <div 
-                      className="absolute -top-4 -left-4 w-12 h-12 rounded-2xl flex items-center justify-center"
-                      style={{ backgroundColor: color }}
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-6 mt-4">
+                    {Array.from({ length: testimonials[currentIndex].rating }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" />
+                    ))}
+                  </div>
+
+                  {/* Quote text */}
+                  <p className="text-lg md:text-xl leading-relaxed text-foreground/90 mb-8">
+                    {testimonials[currentIndex].quote}
+                  </p>
+
+                  {/* Author row */}
+                  <div className="flex items-center gap-4">
+                    {/* Circle avatar */}
+                    <div className="relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-background shrink-0"
+                      style={{ ringColor: colors[currentIndex % colors.length] }}
                     >
-                      <Quote className="w-6 h-6 text-white" />
+                      <Image
+                        src={testimonials[currentIndex].image}
+                        alt={testimonials[currentIndex].name}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                        unoptimized
+                      />
                     </div>
-                    
-                    {/* Rating */}
-                    <div className="flex gap-1 mb-4 ml-8">
-                      {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" />
-                      ))}
-                    </div>
-                    
-                    {/* Quote */}
-                    <p className="text-lg md:text-xl leading-relaxed mb-6">
-                      {`"${testimonial.quote}"`}
-                    </p>
-                    
-                    {/* Author */}
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: color }}
-                      >
-                        {testimonial.image}
-                      </div>
-                      <div>
-                        <h4 className="font-bold">{testimonial.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {testimonial.role} at {testimonial.company}
-                        </p>
-                        <p className="text-xs" style={{ color }}>{testimonial.year}</p>
-                      </div>
+                    <div>
+                      <h4 className="font-bold text-foreground">{testimonials[currentIndex].name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {testimonials[currentIndex].role} · {testimonials[currentIndex].company}
+                      </p>
+                      <p className="text-xs font-medium mt-0.5" style={{ color: colors[currentIndex % colors.length] }}>
+                        {testimonials[currentIndex].year}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
-              )
-            })}
-          </motion.div>
-          
-          {/* Navigation */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4">
+              </AnimatePresence>
+            </motion.div>
+          </div>
+
+          {/* Avatar strip (other testimonials) */}
+          <div className="flex justify-center gap-3 mt-8">
+            {testimonials.map((t, index) => (
+              <motion.button
+                key={t.id}
+                onClick={() => goToSlide(index)}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                className={`relative rounded-full overflow-hidden transition-all duration-300 shrink-0 ${
+                  index === currentIndex
+                    ? "w-14 h-14 ring-2 ring-offset-2 ring-[#1E3A8A] ring-offset-background"
+                    : "w-10 h-10 opacity-50 hover:opacity-80"
+                }`}
+              >
+                <Image
+                  src={t.image}
+                  alt={t.name}
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                  unoptimized
+                />
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Arrow navigation */}
+          <div className="flex items-center justify-center gap-4 mt-6">
             <motion.button
-              className="w-12 h-12 rounded-full glass flex items-center justify-center"
+              className="w-11 h-11 rounded-full glass flex items-center justify-center disabled:opacity-30"
               onClick={() => goToSlide(currentIndex - 1)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               disabled={currentIndex === 0}
             >
-              <ChevronLeft className={`w-6 h-6 ${currentIndex === 0 ? "opacity-30" : ""}`} />
+              <ChevronLeft className="w-5 h-5" />
             </motion.button>
-            
-            {/* Dots */}
-            <div className="flex gap-2">
+
+            {/* Pill dots */}
+            <div className="flex gap-1.5">
               {testimonials.map((_, index) => (
                 <motion.button
                   key={index}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
-                    index === currentIndex 
-                      ? "bg-[#1E3A8A] w-8" 
-                      : "bg-muted-foreground/30"
-                  }`}
                   onClick={() => goToSlide(index)}
-                  whileHover={{ scale: 1.2 }}
+                  animate={{ width: index === currentIndex ? 28 : 8 }}
+                  className={`h-2 rounded-full transition-colors ${
+                    index === currentIndex ? "bg-[#1E3A8A]" : "bg-muted-foreground/25"
+                  }`}
                 />
               ))}
             </div>
-            
+
             <motion.button
-              className="w-12 h-12 rounded-full glass flex items-center justify-center"
+              className="w-11 h-11 rounded-full glass flex items-center justify-center disabled:opacity-30"
               onClick={() => goToSlide(currentIndex + 1)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               disabled={currentIndex === testimonials.length - 1}
             >
-              <ChevronRight className={`w-6 h-6 ${currentIndex === testimonials.length - 1 ? "opacity-30" : ""}`} />
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
         </div>

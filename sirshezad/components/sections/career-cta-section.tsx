@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { ArrowRight, Briefcase, GraduationCap, Sparkles } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export function CareerCTASection() {
   return (
@@ -85,7 +86,25 @@ export function CareerCTASection() {
               </div>
             </div>
 
-            <div className="flex justify-center lg:justify-end">
+            <div className="flex flex-col items-center lg:items-end gap-6">
+              {/* Teacher illustration */}
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.4 }}
+              >
+                <Image
+                  src="/teacher-character.webp"
+                  alt="Faculty member"
+                  width={280}
+                  height={320}
+                  className="object-contain drop-shadow-[0_20px_40px_rgba(245,176,65,0.25)]"
+                  priority={false}
+                />
+              </motion.div>
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}

@@ -39,7 +39,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   }, [isInView, value])
 
   return (
-    <span ref={ref} className="text-3xl md:text-4xl lg:text-3xl xl:text-4xl font-bold gradient-text block truncate px-1">
+    <span ref={ref} className="text-3xl md:text-4xl lg:text-3xl xl:text-4xl font-bold gradient-text block truncate px-1 tabular-nums">
       {count.toLocaleString()}{suffix}
     </span>
   )
@@ -52,20 +52,16 @@ function StatItem({ icon, value, suffix, label, delay }: StatItemProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay }}
-      className="relative group"
+      className="relative group bg-[#050d1f]"
     >
-      <div className="glass-dark rounded-2xl p-6 md:p-8 text-center transition-all duration-300 group-hover:glow h-full flex flex-col items-center justify-center">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#1E3A8A]/5 to-[#7C3AED]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="relative z-10">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#7C3AED] flex items-center justify-center text-white">
-            {icon}
-          </div>
-          
-          <AnimatedCounter value={value} suffix={suffix} />
-          
-          <p className="mt-2 text-muted-foreground font-medium">{label}</p>
+      <div className="p-6 md:p-8 text-center flex flex-col items-center justify-center h-full transition-colors duration-300 group-hover:bg-white/3">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-linear-to-br from-[#1E3A8A]/40 to-[#7C3AED]/40 border border-white/10 flex items-center justify-center text-white/70">
+          {icon}
         </div>
+        
+        <AnimatedCounter value={value} suffix={suffix} />
+        
+        <p className="mt-2 text-white/40 text-sm font-medium">{label}</p>
       </div>
     </motion.div>
   )
@@ -82,11 +78,23 @@ export function StatsSection() {
   ]
 
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-[#1E3A8A]/5 to-background" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#7C3AED]/5 rounded-full blur-3xl" />
-      
+    <section className="py-20 md:py-28 relative overflow-hidden bg-[#050d1f]">
+      {/* Subtle radial glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-[#1E3A8A]/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-[#7C3AED]/10 rounded-full blur-[80px]" />
+      </div>
+
+      {/* Fine grid lines */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -94,18 +102,18 @@ export function StatsSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-2 rounded-full bg-[#F59E0B]/10 text-[#F59E0B] text-sm font-medium mb-4">
+          <span className="inline-block px-4 py-2 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/20 text-[#F59E0B] text-sm font-medium mb-4 tracking-wide">
             Our Impact
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-balance">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
             Numbers That <span className="gradient-text">Speak</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+          <p className="text-base md:text-lg text-white/50 max-w-xl mx-auto">
             Decades of excellence in education, research, and student success
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-white/5 rounded-2xl overflow-hidden border border-white/5">
           {stats.map((stat, index) => (
             <StatItem
               key={stat.label}
