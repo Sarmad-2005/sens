@@ -8,8 +8,8 @@ import Google from "next-auth/providers/google"
  */
 export const authConfig = {
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: "/admin",
+    error: "/admin",
   },
   // Providers listed here are edge-safe.  Credentials is added in auth.ts only.
   providers: [Google],

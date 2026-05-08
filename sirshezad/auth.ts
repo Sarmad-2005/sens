@@ -36,29 +36,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      // First sign-in: populate token from the DB user object
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = (user as { role?: string }).role
-      }
-      // Google OAuth: fetch role from DB (covers first sign-in where user
-      // object may not carry custom fields through the adapter)
-      if (account?.provider === "google" && token.sub && !token.role) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
-          select: { id: true, role: true },
-        })
-        if (dbUser) {
-          token.id = dbUser.id
-          token.role = dbUser.role
-        }
       }
       return token
     },
     session({ session, token }) {
       session.user.id = token.id as string
-      session.user.role = token.role as string
       return session
     },
   },

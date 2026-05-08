@@ -12,7 +12,6 @@ import { Footer } from "@/components/footer"
 const CustomCursor = dynamic(() => import("@/components/custom-cursor").then(mod => mod.CustomCursor), { ssr: false })
 const CampusSection = dynamic(() => import("@/components/sections/campus-section").then(mod => mod.CampusSection), { ssr: false })
 const VirtualTourSection = dynamic(() => import("@/components/sections/virtual-tour-section").then(mod => mod.VirtualTourSection), { ssr: false })
-const ChatWidget = dynamic(() => import("@/components/chat-widget").then(mod => mod.ChatWidget), { ssr: false })
 
 export default function HomePage() {
   return (
@@ -43,9 +42,6 @@ export default function HomePage() {
       
       {/* Footer */}
       <Footer />
-      
-      {/* Chat Widget */}
-      <ChatWidget />
     </main>
   )
 }

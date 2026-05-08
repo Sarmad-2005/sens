@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import { NextResponse } from "next/server"
 import { authConfig } from "./auth.config"
-import { evaluatePolicy, getDashboardRoute } from "@/lib/rbac"
 
 // Use edge-compatible authConfig (no Prisma adapter) for the proxy
 const { auth } = NextAuth(authConfig)
@@ -11,30 +10,14 @@ export const proxy = auth((req) => {
   const { pathname } = req.nextUrl
   const isAuthenticated = !!session?.user
 
-  const isProtectedRoute = pathname.startsWith("/dashboard")
-  const isAuthRoute = pathname === "/login" || pathname === "/signup"
-
-  // Already logged in → redirect away from login/signup
-  if (isAuthRoute && isAuthenticated) {
-    const role = session!.user.role as string
-    return NextResponse.redirect(new URL(getDashboardRoute(role), req.nextUrl))
+  // Redirect authenticated admin away from /admin login page
+  if (pathname === "/admin" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl))
   }
 
-  // Not logged in → redirect to login, preserve destination
-  if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL("/login", req.nextUrl)
-    loginUrl.searchParams.set("callbackUrl", pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // RBAC: role not authorised for this route → send to their own dashboard
-  if (isProtectedRoute && isAuthenticated) {
-    const role = session!.user.role as string
-    if (!evaluatePolicy(role, pathname)) {
-      return NextResponse.redirect(
-        new URL(getDashboardRoute(role), req.nextUrl)
-      )
-    }
+  // Protect /dashboard — redirect unauthenticated to /admin
+  if (pathname.startsWith("/dashboard") && !isAuthenticated) {
+    return NextResponse.redirect(new URL("/admin", req.nextUrl))
   }
 
   return NextResponse.next()

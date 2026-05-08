@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Poppins, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
+import { ChatWidgetLoader } from '@/components/chat-widget-loader'
 import './globals.css'
 
 const poppins = Poppins({ 
@@ -55,6 +56,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+        <ChatWidgetLoader />
         <Analytics />
       </body>
     </html>

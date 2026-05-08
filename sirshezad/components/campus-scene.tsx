@@ -21,7 +21,7 @@ interface Hotspot {
   name: string
   description: string
   position: [number, number, number]
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   images: string[]
 }
 

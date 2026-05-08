@@ -33,15 +33,30 @@ export function LeadFormSection() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
+  const [error, setError] = useState("")
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    setError("")
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      if (!res.ok) {
+        const j = await res.json()
+        setError(j.error ?? "Submission failed. Please try again.")
+        setIsSubmitting(false)
+        return
+      }
+      setIsSubmitted(true)
+    } catch {
+      setError("Network error. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -51,7 +66,7 @@ export function LeadFormSection() {
   return (
     <section id="contact" className="py-20 md:py-32 relative overflow-hidden bg-white">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-blue-50/20" />
+      <div className="absolute inset-0 bg-linear-to-b from-white via-slate-50 to-blue-50/20" />
       
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
@@ -83,7 +98,7 @@ export function LeadFormSection() {
           >
             <div className="bg-white rounded-3xl p-8 relative overflow-hidden shadow-2xl border border-blue-100">
               {/* Decorative gradient */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1E3A8A] via-[#7C3AED] to-[#F59E0B]" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-[#1E3A8A] via-[#7C3AED] to-[#F59E0B]" />
               
               <AnimatePresence mode="wait">
                 {isSubmitted ? (
@@ -234,7 +249,7 @@ export function LeadFormSection() {
                           onChange={(e) => handleInputChange("message", e.target.value)}
                           onFocus={() => setFocusedField("message")}
                           onBlur={() => setFocusedField(null)}
-                          className={`w-full px-4 py-3 rounded-xl bg-slate-50 border-2 transition-all outline-none text-[#0a1128] min-h-[120px] ${
+                          className={`w-full px-4 py-3 rounded-xl bg-slate-50 border-2 transition-all outline-none text-[#0a1128] min-h-30 ${
                             focusedField === "message" 
                               ? "border-[#F59E0B] shadow-[0_0_20px_rgba(245,158,11,0.1)]" 
                               : "border-slate-100"
@@ -248,7 +263,7 @@ export function LeadFormSection() {
                     {/* Submit Button */}
                     <motion.button
                       type="submit"
-                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#F97316] text-white font-semibold flex items-center justify-center gap-2 ripple"
+                      className="w-full py-4 rounded-xl bg-linear-to-r from-[#F59E0B] to-[#F97316] text-white font-semibold flex items-center justify-center gap-2 ripple"
                       disabled={isSubmitting}
                       whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(245, 158, 11, 0.4)" }}
                       whileTap={{ scale: 0.98 }}
@@ -266,6 +281,7 @@ export function LeadFormSection() {
                       )}
                     </motion.button>
                     
+                    {error && <p className="text-sm text-red-600 text-center">{error}</p>}
                     <p className="text-xs text-center text-slate-400">
                       By submitting, you agree to our Terms of Service and Privacy Policy.
                     </p>
@@ -290,7 +306,7 @@ export function LeadFormSection() {
                 className="flex items-start gap-4"
                 whileHover={{ x: 5 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-[#1E3A8A]/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[#1E3A8A]/10 flex items-center justify-center shrink-0">
                   <MapPin className="w-6 h-6 text-[#1E3A8A]" />
                 </div>
                 <div>
@@ -306,7 +322,7 @@ export function LeadFormSection() {
                 className="flex items-start gap-4"
                 whileHover={{ x: 5 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-[#7C3AED]/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[#7C3AED]/10 flex items-center justify-center shrink-0">
                   <Phone className="w-6 h-6 text-[#7C3AED]" />
                 </div>
                 <div>
@@ -322,7 +338,7 @@ export function LeadFormSection() {
                 className="flex items-start gap-4"
                 whileHover={{ x: 5 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center shrink-0">
                   <Mail className="w-6 h-6 text-[#F59E0B]" />
                 </div>
                 <div>

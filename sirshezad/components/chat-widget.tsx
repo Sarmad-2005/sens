@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MessageCircle, X, Send, Bot, User, Phone } from "lucide-react"
+import { MessageCircle, X, Send, Bot, User } from "lucide-react"
 
 interface Message {
   id: string
@@ -14,41 +14,25 @@ interface Message {
 const initialMessages: Message[] = [
   {
     id: "1",
-    text: "Hello! Welcome to Horizon University. How can I help you today?",
+    text: "Asalam-o-Alaikum! Welcome to Riphah International College. How can I help you today? Ask me about programs, admissions, fees, or anything else!",
     sender: "bot",
     timestamp: new Date()
   }
 ]
 
-const botResponses: { [key: string]: string } = {
-  admission: "Our admissions are currently open for the 2025-26 academic year! You can apply online through our portal or fill out the contact form. Would you like me to guide you through the process?",
-  program: "We offer programs in Computer Science, Business Administration, Design & Arts, Medical Sciences, Law, and Engineering. Each program has unique features and career outcomes. Which field interests you?",
-  scholarship: "We offer merit-based scholarships up to 50% of tuition fees! Scholarships are awarded based on academic performance, extracurricular achievements, and financial need. Would you like more details?",
-  fee: "Our fee structure varies by program. You can use our Fee Calculator on the website to get an estimate based on your chosen program and scholarship eligibility.",
-  campus: "Our 50-acre campus features state-of-the-art facilities including modern labs, a 5-floor library, sports complex, and comfortable hostels. Would you like to schedule a campus visit?",
-  default: "Thank you for your question! For detailed information, I recommend speaking with our admissions counselor. Would you like me to connect you with them, or do you have any other questions about our programs?"
-}
-
-function getResponse(message: string): string {
-  const lowerMessage = message.toLowerCase()
-  
-  if (lowerMessage.includes("admission") || lowerMessage.includes("apply")) {
-    return botResponses.admission
+async function fetchBotReply(message: string): Promise<string> {
+  try {
+    const res = await fetch("/api/bot/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    })
+    if (!res.ok) throw new Error("API error")
+    const data = await res.json()
+    return data.reply || "I couldn't find an answer. Please contact our admissions office for help."
+  } catch {
+    return "I'm having trouble right now. Please try again in a moment or visit our Contact page."
   }
-  if (lowerMessage.includes("program") || lowerMessage.includes("course") || lowerMessage.includes("degree")) {
-    return botResponses.program
-  }
-  if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
-    return botResponses.scholarship
-  }
-  if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
-    return botResponses.fee
-  }
-  if (lowerMessage.includes("campus") || lowerMessage.includes("facility") || lowerMessage.includes("visit")) {
-    return botResponses.campus
-  }
-  
-  return botResponses.default
 }
 
 export function ChatWidget() {
@@ -80,12 +64,11 @@ export function ChatWidget() {
     setInputValue("")
     setIsTyping(true)
     
-    // Simulate bot response delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
+    const reply = await fetchBotReply(inputValue)
     
     const botMessage: Message = {
       id: (Date.now() + 1).toString(),
-      text: getResponse(inputValue),
+      text: reply,
       sender: "bot",
       timestamp: new Date()
     }
@@ -149,20 +132,7 @@ export function ChatWidget() {
           )}
         </motion.button>
         
-        {/* WhatsApp Button */}
-        <motion.a
-          href="https://wa.me/15551234567"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute -left-16 top-0 w-12 h-12 rounded-full bg-[#25D366] shadow-lg flex items-center justify-center"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <Phone className="w-5 h-5 text-white" />
-        </motion.a>
+
       </motion.div>
       
       {/* Chat Panel */}
@@ -183,7 +153,7 @@ export function ChatWidget() {
                     <Bot className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Horizon Assistant</h3>
+                    <h3 className="font-semibold text-white">RIC Assistant</h3>
                     <p className="text-xs text-white/70">Online | Typically replies instantly</p>
                   </div>
                 </div>
@@ -265,7 +235,7 @@ export function ChatWidget() {
               
               {/* Quick Replies */}
               <div className="px-4 py-2 border-t border-border/50 flex gap-2 overflow-x-auto scrollbar-hide">
-                {["Admissions", "Programs", "Scholarships", "Campus Visit"].map((topic) => (
+                {["Admissions", "Programs", "Fee Structure", "Contact"].map((topic) => (
                   <motion.button
                     key={topic}
                     className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-[#1E3A8A]/10 transition-colors"

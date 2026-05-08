@@ -9,7 +9,6 @@ import {
 export default async function AdminDashboardPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
-  if (session.user.role !== "ADMIN") redirect("/login")
 
   return (
     <div className="min-h-screen bg-[#0a1128] text-white">

@@ -1,0 +1,47 @@
+import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/auth"
+import { prisma } from "@/lib/prisma"
+
+export async function GET() {
+  const session = await getServerSession(authOptions as Parameters<typeof getServerSession>[0])
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  try {
+    const apps = await prisma.teachingApplication.findMany({ orderBy: { createdAt: "desc" } })
+    return NextResponse.json(apps)
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 })
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+    const { name, email, phone, subject, experience, qualification, message } = body
+
+    if (!name?.trim() || !email?.trim() || !phone?.trim() || !subject?.trim() || !experience?.trim() || !qualification?.trim()) {
+      return NextResponse.json({ error: "All required fields must be filled" }, { status: 400 })
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+    }
+
+    const app = await prisma.teachingApplication.create({
+      data: {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        subject: subject.trim(),
+        experience: experience.trim(),
+        qualification: qualification.trim(),
+        message: message?.trim() || "",
+      },
+    })
+    return NextResponse.json(app, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: "Failed to submit application" }, { status: 500 })
+  }
+}

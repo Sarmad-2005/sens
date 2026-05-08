@@ -9,8 +9,6 @@ datasource db {
 
 enum Role {
   ADMIN
-  TEACHER
-  ACCOUNTANT
 }
 
 model User {
@@ -19,8 +17,8 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // null for OAuth-only accounts
-  role          Role      @default(TEACHER)
+  password      String?
+  role          Role      @default(ADMIN)
   accounts      Account[]
   sessions      Session[]
   createdAt     DateTime  @default(now())
@@ -63,4 +61,132 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model Program {
+  id           String               @id @default(cuid())
+  title        String
+  category     String
+  shortDesc    String
+  fullDesc     String
+  duration     String
+  highlights   Json
+  iconName     String               @default("GraduationCap")
+  color        String               @default("#1E3A8A")
+  active       Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  applications ProgramApplication[]
+}
+
+model ProgramApplication {
+  id              String            @id @default(cuid())
+  name            String
+  dob             String
+  gender          String
+  fatherName      String
+  cnic            String
+  lastInstitution String
+  grade           String
+  percentage      String
+  phone           String
+  email           String
+  address         String
+  status          ApplicationStatus @default(PENDING)
+  programId       String
+  program         Program           @relation(fields: [programId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model FacultyMember {
+  id              String   @id @default(cuid())
+  name            String
+  title           String
+  department      String
+  bio             String
+  specializations Json
+  publications    Int      @default(0)
+  awards          Int      @default(0)
+  students        Int      @default(0)
+  image           String   @default("")
+  isDirector      Boolean  @default(false)
+  displayOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  type        String
+  date        String
+  time        String
+  location    String
+  description String
+  attendees   String
+  image       String   @default("")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactSubmission {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String        @default("")
+  subject   String
+  message   String
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model BotDocument {
+  id        String   @id @default(cuid())
+  title     String
+  category  String   @default("general")
+  content   String
+  fileName  String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BotRule {
+  id        String   @id @default(cuid())
+  title     String
+  rule      String
+  priority  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeachingApplication {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  phone         String
+  subject       String
+  experience    String
+  qualification String
+  message       String   @default("")
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

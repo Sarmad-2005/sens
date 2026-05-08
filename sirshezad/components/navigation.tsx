@@ -70,20 +70,7 @@ export function Navigation() {
               </motion.a>
             ))}
 
-            {/* Login Button — Gold, matching react-frontend */}
-            <Link href="/login">
-              <motion.span
-                className="inline-block px-6 py-2.5 rounded-lg bg-[#f5b041] text-[#0a1128] font-bold font-[var(--font-poppins)] no-underline cursor-pointer"
-                whileHover={{ 
-                  scale: 1.05,
-                  backgroundColor: "#f39c12",
-                }}
-                whileTap={{ scale: 0.95 }}
-                style={{ textDecoration: "none" }}
-              >
-                Login
-              </motion.span>
-            </Link>
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -141,13 +128,6 @@ export function Navigation() {
                   </motion.a>
                 ))}
                 <div className="flex flex-col gap-3 pt-4">
-                  <Link 
-                    href="/login" 
-                    className="w-full py-3 rounded-lg bg-[#f5b041] text-[#0a1128] text-center font-bold no-underline"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Login
-                  </Link>
                   <Link
                     href="/admissions"
                     className="w-full py-3 rounded-lg border border-[#f5b041] text-[#f5b041] text-center font-semibold no-underline"
