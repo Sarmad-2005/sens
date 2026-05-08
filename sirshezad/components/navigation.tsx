@@ -8,7 +8,6 @@ import Image from "next/image"
 
 const navItems = [
   { name: "Programs", href: "/programs" },
-  { name: "Campus", href: "/#campus" },
   { name: "Faculty", href: "/faculty" },
   { name: "Events", href: "/events" },
   { name: "Admissions", href: "/admissions" },
