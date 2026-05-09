@@ -8,7 +8,7 @@ interface TourScene {
   id: string
   name: string
   description: string
-  icon: React.ElementType
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   color: string
 }
 

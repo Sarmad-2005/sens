@@ -9,7 +9,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
   const { id } = await params
   const body = await req.json()
-  const event = await prisma.event.update({ where: { id }, data: body })
+  const { title, type, date, time, location, description, attendees, image, active } = body
+  const event = await prisma.event.update({ where: { id }, data: { title, type, date, time, location, description, attendees, image, active } })
   return NextResponse.json(event)
 }
 

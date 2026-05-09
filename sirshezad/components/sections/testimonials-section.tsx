@@ -160,7 +160,7 @@ export function TestimonialsSection() {
                   <div className="flex items-center gap-4">
                     {/* Circle avatar */}
                     <div className="relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-background shrink-0"
-                      style={{ ringColor: colors[currentIndex % colors.length] }}
+                      style={{ ['--tw-ring-color' as string]: colors[currentIndex % colors.length] }}
                     >
                       <Image
                         src={testimonials[currentIndex].image}

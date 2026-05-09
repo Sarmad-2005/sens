@@ -39,12 +39,12 @@ const categoryColors: Record<string, string> = {
   intermediate:   "#F59E0B",
 }
 
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   Briefcase, Code, Stethoscope, Laptop, BookOpen, Monitor, Microscope, Zap, GraduationCap,
 }
 
-function getIcon(name: string): React.ElementType {
-  return ICON_MAP[name] ?? GraduationCap
+function getIcon(name: string): React.ComponentType<React.SVGProps<SVGSVGElement>> {
+  return (ICON_MAP[name] ?? GraduationCap) as React.ComponentType<React.SVGProps<SVGSVGElement>>
 }
 
 function ProgramCard({ program, onClick }: { program: Program; onClick: () => void }) {

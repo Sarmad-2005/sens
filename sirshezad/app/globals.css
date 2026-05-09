@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-poppins: 'Poppins', sans-serif;
+  --font-inter: 'Inter', sans-serif;
   --background: oklch(0.98 0.005 250);
   --foreground: oklch(0.2 0.05 250);
   --card: oklch(1 0 0 / 0.7);

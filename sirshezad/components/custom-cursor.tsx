@@ -26,8 +26,8 @@ export function CustomCursor() {
       const isClickable = 
         target.tagName === 'A' ||
         target.tagName === 'BUTTON' ||
-        target.closest('a') ||
-        target.closest('button') ||
+        !!target.closest('a') ||
+        !!target.closest('button') ||
         target.getAttribute('role') === 'button' ||
         target.classList.contains('clickable') ||
         window.getComputedStyle(target).cursor === 'pointer'

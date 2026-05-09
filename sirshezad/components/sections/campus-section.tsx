@@ -47,7 +47,7 @@ export function CampusSection() {
       if ('fastSeek' in video) {
         ;(video as HTMLVideoElement & { fastSeek(t: number): void }).fastSeek(targetTime)
       } else {
-        video.currentTime = targetTime
+        (video as HTMLVideoElement).currentTime = targetTime
       }
     }
 

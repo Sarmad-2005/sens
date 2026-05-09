@@ -9,7 +9,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
   const { id } = await params
   const body = await req.json()
-  const member = await prisma.facultyMember.update({ where: { id }, data: body })
+  const { name, title: memberTitle, department, bio, specializations, publications, awards, students, image, isDirector, displayOrder } = body
+  const member = await prisma.facultyMember.update({ where: { id }, data: { name, title: memberTitle, department, bio, specializations, publications, awards, students, image, isDirector, displayOrder } })
   return NextResponse.json(member)
 }
 

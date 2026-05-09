@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import {
   LayoutDashboard, BookOpen, FileText, Users, Calendar, MessageSquare,
-  Plus, Pencil, Trash2, Download, X, Check, Loader2, LogOut, Bot, GraduationCap,
+  Plus, Pencil, Trash2, Download, X, Check, Loader2, LogOut, Bot, GraduationCap, Tag,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -41,10 +41,14 @@ interface BotRule {
 interface TeachingApplication {
   id: string; name: string; email: string; phone: string; subject: string; experience: string; qualification: string; message: string; status: string; createdAt: string
 }
+interface ProgramCategory {
+  id: string; slug: string; label: string; active: boolean
+}
 
 const TABS = [
   { id: "overview",     label: "Overview",     icon: LayoutDashboard },
   { id: "programs",     label: "Programs",     icon: BookOpen },
+  { id: "categories",  label: "Categories",   icon: Tag },
   { id: "applications", label: "Applications", icon: FileText },
   { id: "faculty",      label: "Faculty",      icon: Users },
   { id: "events",       label: "Events",       icon: Calendar },
@@ -53,9 +57,7 @@ const TABS = [
   { id: "bot",          label: "Bot & RAG",    icon: Bot },
 ]
 
-const PROGRAM_CATEGORIES = [
-  "adp-business","adp-science","adp-computer","adp-health","digital-skills","intermediate",
-]
+// Categories loaded dynamically from API in ProgramsTab and CategoriesTab
 const EVENT_TYPES = ["Open House","Workshop","Career Fair","Seminar","Sports","Cultural","Academic"]
 const APP_STATUSES = ["PENDING","REVIEWED","ACCEPTED","REJECTED"]
 const CONTACT_STATUSES = ["NEW","READ","REPLIED"]
@@ -155,17 +157,21 @@ function OverviewTab({ programs, applications, faculty, events, contacts }: {
 
 function ProgramsTab() {
   const [programs, setPrograms] = useState<Program[]>([])
+  const [categories, setCategories] = useState<ProgramCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<"add" | "edit" | null>(null)
   const [editing, setEditing] = useState<Program | null>(null)
   const [form, setForm] = useState<Partial<Program>>({})
   const [saving, setSaving] = useState(false)
 
+  const loadCategories = useCallback(() => {
+    fetch("/api/program-categories").then(r => r.json()).then(d => setCategories(Array.isArray(d) ? d : [])).catch(() => {})
+  }, [])
   const load = useCallback(() => {
     setLoading(true)
-    fetch("/api/programs").then(r => r.json()).then(d => { setPrograms(d); setLoading(false) }).catch(() => setLoading(false))
+    fetch("/api/programs").then(r => r.json()).then(d => { setPrograms(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load(); loadCategories() }, [load, loadCategories])
 
   const openAdd = () => { setForm({ active: true, highlights: [] }); setModal("add") }
   const openEdit = (p: Program) => { setEditing(p); setForm(p); setModal("edit") }
@@ -225,7 +231,7 @@ function ProgramsTab() {
             <Field label="Category">
               <select className={inputCls} value={form.category ?? ""} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
                 <option value="">Select category</option>
-                {PROGRAM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {categories.map(c => <option key={c.slug} value={c.slug}>{c.label}</option>)}
               </select>
             </Field>
             <Field label="Short Description"><input className={inputCls} value={form.shortDesc ?? ""} onChange={e => setForm(f => ({ ...f, shortDesc: e.target.value }))} /></Field>
@@ -254,7 +260,7 @@ function ApplicationsTab() {
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch("/api/applications").then(r => r.json()).then(d => { setApplications(d); setLoading(false) }).catch(() => setLoading(false))
+    fetch("/api/applications").then(r => r.json()).then(d => { setApplications(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -307,16 +313,29 @@ function FacultyTab() {
   const [editing, setEditing] = useState<Faculty | null>(null)
   const [form, setForm] = useState<Partial<Faculty>>({})
   const [saving, setSaving] = useState(false)
+  const [imageUploading, setImageUploading] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch("/api/faculty").then(r => r.json()).then(d => { setFaculty(d); setLoading(false) }).catch(() => setLoading(false))
+    fetch("/api/faculty").then(r => r.json()).then(d => { setFaculty(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load])
 
   const openAdd = () => { setForm({ isDirector: false, displayOrder: 0 }); setModal("add") }
   const openEdit = (m: Faculty) => { setEditing(m); setForm(m); setModal("edit") }
-  const closeModal = () => { setModal(null); setEditing(null); setForm({}) }
+  const closeModal = () => { setModal(null); setEditing(null); setForm({}); setImageUploading(false) }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageUploading(true)
+    const fd = new FormData()
+    fd.append("image", file)
+    const res = await fetch("/api/upload/faculty", { method: "POST", body: fd })
+    const data = await res.json()
+    if (data.url) setForm(f => ({ ...f, image: data.url }))
+    setImageUploading(false)
+  }
 
   const save = async () => {
     setSaving(true)
@@ -379,7 +398,11 @@ function FacultyTab() {
               <Field label="Awards"><input type="number" className={inputCls} value={form.awards ?? ""} onChange={e => setForm(f => ({ ...f, awards: Number(e.target.value) || null }))} /></Field>
               <Field label="Students"><input type="number" className={inputCls} value={form.students ?? ""} onChange={e => setForm(f => ({ ...f, students: Number(e.target.value) || null }))} /></Field>
             </div>
-            <Field label="Image URL"><input className={inputCls} value={form.image ?? ""} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." /></Field>
+            <Field label="Photo">
+              <input type="file" accept="image/*" onChange={handleImageUpload} className={inputCls} />
+              {imageUploading && <p className="text-xs text-slate-400 mt-1 animate-pulse">Uploading…</p>}
+              {form.image && <img src={form.image} alt="preview" className="w-16 h-16 rounded-full object-cover mt-2 border border-slate-200" />}
+            </Field>
             <Field label="Display Order"><input type="number" className={inputCls} value={form.displayOrder ?? 0} onChange={e => setForm(f => ({ ...f, displayOrder: Number(e.target.value) }))} /></Field>
             <div className="flex items-center gap-2">
               <input type="checkbox" id="is-director" checked={form.isDirector ?? false} onChange={e => setForm(f => ({ ...f, isDirector: e.target.checked }))} />
@@ -497,7 +520,7 @@ function ContactTab() {
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch("/api/contact").then(r => r.json()).then(d => { setContacts(d); setLoading(false) }).catch(() => setLoading(false))
+    fetch("/api/contact").then(r => r.json()).then(d => { setContacts(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -508,7 +531,12 @@ function ContactTab() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-[#0a1128] mb-6">Contact Submissions</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#0a1128]">Contact Submissions</h2>
+        <a href="/api/contact/export" target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981] text-white text-sm font-semibold hover:bg-[#10B981]/90 transition-colors">
+          <Download className="w-4 h-4" /> Export CSV
+        </a>
+      </div>
       {loading ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-[#1E3A8A]" /></div> : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
@@ -551,7 +579,7 @@ function TeachingTab() {
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch("/api/teaching-applications").then(r => r.json()).then(d => { setApps(d); setLoading(false) }).catch(() => setLoading(false))
+    fetch("/api/teaching-applications").then(r => r.json()).then(d => { setApps(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -567,7 +595,12 @@ function TeachingTab() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-[#0a1128] mb-6">Teaching Job Applications</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#0a1128]">Teaching Job Applications</h2>
+        <a href="/api/teaching-applications/export" target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981] text-white text-sm font-semibold hover:bg-[#10B981]/90 transition-colors">
+          <Download className="w-4 h-4" /> Export CSV
+        </a>
+      </div>
       {loading ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-[#1E3A8A]" /></div> : apps.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center text-slate-400">
           <GraduationCap className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -833,6 +866,99 @@ function BotTab() {
   )
 }
 
+function CategoriesTab() {
+  const [categories, setCategories] = useState<ProgramCategory[]>([])
+  const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState<"add" | "edit" | null>(null)
+  const [editing, setEditing] = useState<ProgramCategory | null>(null)
+  const [form, setForm] = useState<{ slug: string; label: string; active: boolean }>({ slug: "", label: "", active: true })
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    fetch("/api/program-categories").then(r => r.json()).then(d => { setCategories(Array.isArray(d) ? d : []); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const openAdd = () => { setForm({ slug: "", label: "", active: true }); setModal("add") }
+  const openEdit = (c: ProgramCategory) => { setEditing(c); setForm({ slug: c.slug, label: c.label, active: c.active }); setModal("edit") }
+  const closeModal = () => { setModal(null); setEditing(null); setForm({ slug: "", label: "", active: true }) }
+
+  const save = async () => {
+    if (!form.label.trim()) return
+    setSaving(true)
+    if (modal === "edit" && editing) {
+      await fetch(`/api/program-categories/${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: form.label, active: form.active }) })
+    } else {
+      await fetch("/api/program-categories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
+    }
+    setSaving(false); closeModal(); load()
+  }
+
+  const del = async (id: string) => {
+    if (!confirm("Delete this category? Programs using it will keep the slug but the category won't appear in dropdowns.")) return
+    await fetch(`/api/program-categories/${id}`, { method: "DELETE" }); load()
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#0a1128]">Program Categories</h2>
+        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:bg-[#1E3A8A]/90 transition-colors">
+          <Plus className="w-4 h-4" /> Add Category
+        </button>
+      </div>
+      <p className="text-slate-500 text-sm mb-6">Categories are used to organise programs. The <strong>slug</strong> is the URL-safe key used in the database; the <strong>label</strong> is what's shown to users.</p>
+      {loading ? <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-[#1E3A8A]" /></div> : (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>{["Slug","Label","Active",""].map(h => <th key={h} className="text-left py-3 px-4 text-slate-500 font-medium">{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {categories.map(c => (
+                <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50">
+                  <td className="py-3 px-4 font-mono text-xs text-slate-600">{c.slug}</td>
+                  <td className="py-3 px-4 font-medium text-[#0a1128]">{c.label}</td>
+                  <td className="py-3 px-4">{c.active ? <Check className="w-4 h-4 text-green-600" /> : <X className="w-4 h-4 text-slate-400" />}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => del(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {modal && (
+        <Modal title={modal === "add" ? "Add Category" : "Edit Category"} onClose={closeModal}>
+          <div className="space-y-4">
+            {modal === "add" && (
+              <Field label="Slug (URL-safe, auto-generated from label if left blank)">
+                <input className={inputCls} value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }))} placeholder="e.g. adp-business" />
+              </Field>
+            )}
+            <Field label="Label *"><input className={inputCls} value={form.label} onChange={e => {
+              const label = e.target.value
+              setForm(f => ({ ...f, label, ...(modal === "add" && !f.slug ? { slug: label.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") } : {}) }))
+            }} placeholder="e.g. ADP — Business & Social Sciences" /></Field>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="cat-active" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} />
+              <label htmlFor="cat-active" className="text-sm font-medium text-slate-700">Active (shown in program dropdowns)</label>
+            </div>
+            <button onClick={save} disabled={saving} className="w-full py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#1E3A8A]/90 transition-colors disabled:opacity-60">
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Category"}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -858,7 +984,13 @@ export default function AdminDashboard() {
       fetch("/api/events").then(r => r.json()),
       fetch("/api/contact").then(r => r.json()),
     ]).then(([programs, applications, faculty, events, contacts]) => {
-      setAllData({ programs, applications, faculty, events, contacts })
+      setAllData({
+        programs:     Array.isArray(programs)     ? programs     : [],
+        applications: Array.isArray(applications) ? applications : [],
+        faculty:      Array.isArray(faculty)      ? faculty      : [],
+        events:       Array.isArray(events)       ? events       : [],
+        contacts:     Array.isArray(contacts)     ? contacts     : [],
+      })
     }).catch(() => {})
   }, [status])
 
@@ -901,6 +1033,7 @@ export default function AdminDashboard() {
       <main className="flex-1 p-8 overflow-auto">
         {activeTab === "overview"     && <OverviewTab {...allData} />}
         {activeTab === "programs"     && <ProgramsTab />}
+        {activeTab === "categories"   && <CategoriesTab />}
         {activeTab === "applications" && <ApplicationsTab />}
         {activeTab === "faculty"      && <FacultyTab />}
         {activeTab === "events"       && <EventsTab />}
