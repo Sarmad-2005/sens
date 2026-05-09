@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
     }
 
+    const { cvUrl } = body
     const app = await prisma.teachingApplication.create({
       data: {
         name: name.trim(),
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
         experience: experience.trim(),
         qualification: qualification.trim(),
         message: message?.trim() || "",
+        cvUrl: cvUrl?.trim() || "",
       },
     })
     return NextResponse.json(app, { status: 201 })

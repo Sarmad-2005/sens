@@ -17,6 +17,7 @@ export default function FacultyPage() {
         title="Our Expert" 
         highlightedText="Faculty" 
         subtitle="Learn from world-class educators and industry experts who are dedicated to shaping the next generation of global leaders."
+        showButtons={false}
       />
       
       {/* Faculty Section */}

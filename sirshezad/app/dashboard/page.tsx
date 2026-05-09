@@ -39,7 +39,7 @@ interface BotRule {
   id: string; title: string; rule: string; priority: number; active: boolean; createdAt: string
 }
 interface TeachingApplication {
-  id: string; name: string; email: string; phone: string; subject: string; experience: string; qualification: string; message: string; status: string; createdAt: string
+  id: string; name: string; email: string; phone: string; subject: string; experience: string; qualification: string; message: string; cvUrl: string; status: string; createdAt: string
 }
 interface ProgramCategory {
   id: string; slug: string; label: string; active: boolean
@@ -517,6 +517,7 @@ function EventsTab() {
 function ContactTab() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewContact, setViewContact] = useState<Contact | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -527,6 +528,13 @@ function ContactTab() {
   const updateStatus = async (id: string, status: string) => {
     await fetch(`/api/contact/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
     load()
+  }
+
+  const CONTACT_STATUS_COLORS: Record<string, string> = {
+    NEW: "bg-blue-100 text-blue-700",
+    READ: "bg-slate-100 text-slate-700",
+    REPLIED: "bg-green-100 text-green-700",
+    ARCHIVED: "bg-gray-100 text-gray-500",
   }
 
   return (
@@ -541,25 +549,44 @@ function ContactTab() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Name","Email","Subject","Status","Date"].map(h => <th key={h} className="text-left py-3 px-4 text-slate-500 font-medium">{h}</th>)}</tr>
+              <tr>{["Name","Email","Subject","Message","Status","Date",""].map(h => <th key={h} className="text-left py-3 px-4 text-slate-500 font-medium">{h}</th>)}</tr>
             </thead>
             <tbody>
               {contacts.map(c => (
                 <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50">
                   <td className="py-3 px-4 font-medium text-[#0a1128]">{c.name}</td>
                   <td className="py-3 px-4 text-slate-500">{c.email}</td>
-                  <td className="py-3 px-4 text-slate-500 max-w-xs truncate">{c.subject}</td>
+                  <td className="py-3 px-4 text-slate-500 max-w-[160px] truncate">{c.subject}</td>
+                  <td className="py-3 px-4 text-slate-500 max-w-[200px] truncate">{c.message}</td>
                   <td className="py-3 px-4">
                     <select value={c.status} onChange={e => updateStatus(c.id, e.target.value)} className="px-2 py-1 rounded-lg border border-slate-200 text-xs bg-white">
                       {CONTACT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
                   <td className="py-3 px-4 text-slate-500">{new Date(c.createdAt).toLocaleDateString()}</td>
+                  <td className="py-3 px-4">
+                    <button onClick={() => setViewContact(c)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors text-xs">View</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {viewContact && (
+        <Modal title="Contact Details" onClose={() => setViewContact(null)}>
+          <div className="space-y-3 text-sm">
+            {([["Name", viewContact.name], ["Email", viewContact.email], ["Phone", viewContact.phone ?? "—"], ["Subject", viewContact.subject]] as [string,string][]).map(([label, val]) => (
+              <div key={label}><span className="font-semibold text-slate-700">{label}: </span><span className="text-slate-600">{val}</span></div>
+            ))}
+            <div>
+              <span className="font-semibold text-slate-700">Message: </span>
+              <p className="text-slate-600 mt-1 whitespace-pre-wrap bg-slate-50 rounded-lg p-3">{viewContact.message}</p>
+            </div>
+            <div><span className="font-semibold text-slate-700">Status: </span><Badge value={viewContact.status} colors={CONTACT_STATUS_COLORS} /></div>
+            <div><span className="font-semibold text-slate-700">Date: </span><span className="text-slate-600">{new Date(viewContact.createdAt).toLocaleString()}</span></div>
+          </div>
+        </Modal>
       )}
     </div>
   )
@@ -645,6 +672,11 @@ function TeachingTab() {
               <div key={label}><span className="font-semibold text-slate-700">{label}: </span><span className="text-slate-600">{val}</span></div>
             ))}
             {viewApp.message && <div><span className="font-semibold text-slate-700">Message: </span><p className="text-slate-600 mt-1 whitespace-pre-wrap">{viewApp.message}</p></div>}
+            {viewApp.cvUrl && (
+              <div><span className="font-semibold text-slate-700">CV: </span>
+                <a href={viewApp.cvUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">Download CV</a>
+              </div>
+            )}
             <div><span className="font-semibold text-slate-700">Status: </span><Badge value={viewApp.status} colors={{ PENDING: "bg-yellow-100 text-yellow-700", REVIEWED: "bg-blue-100 text-blue-700", ACCEPTED: "bg-green-100 text-green-700", REJECTED: "bg-red-100 text-red-700" }} /></div>
             <div><span className="font-semibold text-slate-700">Date: </span><span className="text-slate-600">{new Date(viewApp.createdAt).toLocaleString()}</span></div>
           </div>

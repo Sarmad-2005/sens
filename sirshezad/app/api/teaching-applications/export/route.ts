@@ -8,7 +8,7 @@ export async function GET() {
 
   const apps = await prisma.teachingApplication.findMany({ orderBy: { createdAt: "desc" } })
 
-  const header = ["ID", "Name", "Email", "Phone", "Subject", "Experience", "Qualification", "Message", "Status", "Date"]
+  const header = ["ID", "Name", "Email", "Phone", "Subject", "Experience", "Qualification", "Message", "CV URL", "Status", "Date"]
   const rows = apps.map((a) => [
     a.id,
     `"${a.name.replace(/"/g, '""')}"`,
@@ -18,6 +18,7 @@ export async function GET() {
     `"${a.experience.replace(/"/g, '""')}"`,
     `"${a.qualification.replace(/"/g, '""')}"`,
     `"${a.message.replace(/"/g, '""').replace(/\n/g, " ")}"`,
+    a.cvUrl ?? "",
     a.status,
     new Date(a.createdAt).toISOString().slice(0, 10),
   ])

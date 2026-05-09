@@ -195,6 +195,7 @@ model TeachingApplication {
   experience    String
   qualification String
   message       String   @default("")
+  cvUrl         String   @default("")
   status        String   @default("PENDING")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

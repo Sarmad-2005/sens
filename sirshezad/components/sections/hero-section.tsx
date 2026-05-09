@@ -3,18 +3,19 @@
 import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { HeroScene } from "@/components/hero-scene"
-import Link from "next/link"
 
 interface HeroSectionProps {
   title?: string
   highlightedText?: string
   subtitle?: string
+  showButtons?: boolean
 }
 
 export function HeroSection({ 
   title = "Shaping", 
   highlightedText = "Future Leaders", 
-  subtitle = "Experience world-class education in a futuristic campus designed for innovation, creativity, and structural excellence." 
+  subtitle = "Experience world-class education in a futuristic campus designed for innovation, creativity, and structural excellence.",
+  showButtons = true,
 }: HeroSectionProps) {
   return (
     <section id="hero" className="relative w-full min-h-screen flex items-center overflow-hidden" style={{ paddingTop: "80px", backgroundColor: "#0a1128" }}>
@@ -97,26 +98,25 @@ export function HeroSection({
           </motion.p>
 
           {/* Buttons */}
-          <motion.div 
+          {showButtons && <motion.div 
             className="flex flex-col sm:flex-row gap-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
-            <Link href="/admissions">
-              <motion.span
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-[#f5b041] text-[#0a1128] font-[var(--font-poppins)] text-[1.1rem] font-bold no-underline cursor-pointer"
-                whileHover={{ 
-                  scale: 1.05,
-                  backgroundColor: "#f39c12",
-                  boxShadow: "0 0 40px rgba(245, 176, 65, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Apply Now
-                <ArrowRight className="w-5 h-5" />
-              </motion.span>
-            </Link>
+            <motion.a
+              href="/admissions"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-[#f5b041] text-[#0a1128] font-[var(--font-poppins)] text-[1.1rem] font-bold no-underline cursor-pointer"
+              whileHover={{ 
+                scale: 1.05,
+                backgroundColor: "#f39c12",
+                boxShadow: "0 0 40px rgba(245, 176, 65, 0.4)"
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Apply Now
+              <ArrowRight className="w-5 h-5" />
+            </motion.a>
             
             <motion.a
               href="#tour"
@@ -133,7 +133,7 @@ export function HeroSection({
             >
               Virtual Tour
             </motion.a>
-          </motion.div>
+          </motion.div>}
         </motion.div>
       </div>
       

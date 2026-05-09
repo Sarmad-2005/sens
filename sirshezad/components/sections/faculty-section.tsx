@@ -26,23 +26,112 @@ function Avatar({ member, size = "md" }: { member: FacultyMember; size?: "sm" | 
     return <img src={member.image} alt={member.name} className={`${sizeMap[size]} rounded-full object-cover`} />
   }
   return (
-    <div className={`${sizeMap[size]} rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#7C3AED] flex items-center justify-center text-white font-bold`}>
+    <div className={`${sizeMap[size]} rounded-full bg-linear-to-br from-[#1E3A8A] to-[#7C3AED] flex items-center justify-center text-white font-bold`}>
       {initials}
     </div>
   )
 }
 
-function DirectorCard({ member }: { member: FacultyMember }) {
+function DirectorSlider({ directors }: { directors: FacultyMember[] }) {
+  const [index, setIndex] = useState(0)
+  const [dir, setDir] = useState(1)
+  const member = directors[index]
+
+  const go = (d: number) => {
+    setDir(d)
+    setIndex(i => (i + d + directors.length) % directors.length)
+  }
+
+  const initials = member.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+
   return (
-    <motion.div whileHover={{ y: -4 }} className="flex-none w-72 bg-white rounded-2xl shadow-lg border border-slate-100 p-6 flex flex-col items-center text-center group hover:shadow-xl transition-shadow">
-      <div className="mb-4 ring-4 ring-[#1E3A8A]/20 rounded-full">
-        <Avatar member={member} size="lg" />
+    <div className="relative rounded-3xl overflow-hidden bg-[#0a1128] shadow-2xl min-h-110 flex flex-col md:flex-row">
+      {/* Left — full data */}
+      <div className="flex-1 p-10 md:p-14 flex flex-col justify-center relative z-10">
+        <AnimatePresence mode="wait" custom={dir}>
+          <motion.div
+            key={member.id}
+            custom={dir}
+            initial={{ opacity: 0, x: dir * 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: dir * -60 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          >
+            <span className="inline-block px-3 py-1 rounded-full bg-[#f5b041]/20 text-[#f5b041] text-xs font-semibold uppercase tracking-widest mb-5">
+              {member.department}
+            </span>
+            <h3 className="text-3xl md:text-4xl font-extrabold text-white mb-2 leading-tight">{member.name}</h3>
+            <p className="text-[#f5b041] font-semibold text-lg mb-6">{member.title}</p>
+            <p className="text-slate-300 text-base leading-relaxed mb-8 max-w-xl">{member.bio}</p>
+            {member.specializations?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-8">
+                {member.specializations.map((s: string) => (
+                  <span key={s} className="px-3 py-1 rounded-full bg-white/10 text-slate-200 text-sm border border-white/10">{s}</span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-8">
+              {member.publications != null && (
+                <div><p className="text-2xl font-bold text-[#f5b041]">{member.publications}</p><p className="text-slate-400 text-xs mt-0.5">Papers</p></div>
+              )}
+              {member.awards != null && (
+                <div><p className="text-2xl font-bold text-[#f5b041]">{member.awards}</p><p className="text-slate-400 text-xs mt-0.5">Awards</p></div>
+              )}
+              {member.students != null && (
+                <div><p className="text-2xl font-bold text-[#f5b041]">{member.students}+</p><p className="text-slate-400 text-xs mt-0.5">Students</p></div>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Dots + nav */}
+        {directors.length > 1 && (
+          <div className="flex items-center gap-4 mt-10">
+            <button onClick={() => go(-1)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors">
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </button>
+            <div className="flex gap-1.5">
+              {directors.map((_: FacultyMember, i: number) => (
+                <button key={i} onClick={() => { setDir(i > index ? 1 : -1); setIndex(i) }}
+                  className={`h-2 rounded-full transition-all ${ i === index ? "w-6 bg-[#f5b041]" : "w-2 bg-white/30" }`}
+                />
+              ))}
+            </div>
+            <button onClick={() => go(1)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors">
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        )}
       </div>
-      <h3 className="font-bold text-[#0a1128] text-lg leading-tight mb-1">{member.name}</h3>
-      <p className="text-[#1E3A8A] text-sm font-semibold mb-1">{member.title}</p>
-      <p className="text-slate-500 text-xs mb-4">{member.department}</p>
-      <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">{member.bio}</p>
-    </motion.div>
+
+      {/* Right — large image */}
+      <div className="hidden md:flex w-96 shrink-0 items-center justify-center relative overflow-hidden bg-linear-to-br from-[#1E3A8A]/40 to-[#0a1128]">
+        <AnimatePresence mode="wait" custom={dir}>
+          <motion.div
+            key={member.id + "-img"}
+            custom={dir}
+            initial={{ opacity: 0, scale: 1.08, x: dir * 40 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.95, x: dir * -40 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="absolute inset-0 flex items-end justify-center"
+          >
+            {member.image ? (
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-full h-full object-cover object-top"
+              />
+            ) : (
+              <div className="w-56 h-56 rounded-full bg-linear-to-br from-[#1E3A8A] to-[#7C3AED] flex items-center justify-center text-white text-6xl font-bold mb-16">
+                {initials}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-linear-to-r from-[#0a1128] via-[#0a1128]/10 to-transparent" />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
   )
 }
 
@@ -99,7 +188,6 @@ export function FacultySection() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [formError, setFormError] = useState("")
-  const sliderRef = useRef<HTMLDivElement>(null)
   const facultySliderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -164,20 +252,16 @@ export function FacultySection() {
           <>
             {/* Directors Slider */}
             {directors.length > 0 && (
-              <div className="mb-16">
-                <h3 className="text-2xl font-bold text-[#0a1128] mb-6 text-center">Directors &amp; Principals</h3>
-                <div className="relative">
-                  <button onClick={() => scroll(sliderRef, "left")} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-colors">
-                    <ChevronLeft className="w-5 h-5 text-slate-600" />
-                  </button>
-                  <div ref={sliderRef} className="flex gap-5 overflow-x-auto scrollbar-hide pb-2 scroll-smooth px-2">
-                    {directors.map(m => <DirectorCard key={m.id} member={m} />)}
-                  </div>
-                  <button onClick={() => scroll(sliderRef, "right")} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-colors">
-                    <ChevronRight className="w-5 h-5 text-slate-600" />
-                  </button>
-                </div>
-              </div>
+              <motion.div
+                className="mb-16"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h3 className="text-2xl font-bold text-[#0a1128] mb-8 text-center">Directors &amp; Principals</h3>
+                <DirectorSlider directors={directors} />
+              </motion.div>
             )}
 
             {/* Faculty Members Slider */}
@@ -206,7 +290,7 @@ export function FacultySection() {
 
         {/* Join Our Faculty CTA */}
         <motion.div
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a1128] via-[#1E3A8A] to-[#7C3AED] p-10 text-center"
+          className="relative overflow-hidden rounded-3xl bg-linear-to-br from-[#0a1128] via-[#1E3A8A] to-[#7C3AED] p-10 text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
